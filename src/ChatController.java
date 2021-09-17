@@ -1,8 +1,6 @@
 
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -19,17 +17,18 @@ import javafx.stage.Stage;
 import org.jgroups.*;
 import org.jgroups.jmx.JmxConfigurator;
 import org.jgroups.stack.AddressGenerator;
-import org.jgroups.util.OneTimeAddressGenerator;
 import org.jgroups.util.Util;
 
 import javax.management.MBeanServer;
-import javax.swing.*;
-import java.awt.event.*;
 import java.io.*;
 import java.util.List;
 import java.util.*;
 
 public class ChatController implements Receiver, ChannelListener {
+
+    /*********************************************** */
+    /* VARIABLES DE JAVAFX */
+    /*********************************************** */
 
     @FXML
     private TextField chatInput;
@@ -41,6 +40,12 @@ public class ChatController implements Receiver, ChannelListener {
     private BorderPane whiteboard;
     @FXML
     private AnchorPane mainContainer;
+    @FXML
+    private VBox usersPane;
+
+    /*********************************************** */
+    /* VARIABLES PARA GRUPOS */
+    /*********************************************** */
 
     protected String cluster_name = "chat3";
     private JChannel channel = null;
@@ -51,8 +56,11 @@ public class ChatController implements Receiver, ChannelListener {
     private final Random random = new Random(System.currentTimeMillis());
     private Color drawingColor = selectColor();
     private final List<Address> members = new ArrayList<>();
-
     private String props = null;
+
+    /*********************************************** */
+    /* Constructores */
+    /*********************************************** */
 
     public ChatController() {
     }
@@ -75,13 +83,13 @@ public class ChatController implements Receiver, ChannelListener {
 
     public void initChat(String host, String user) throws Exception {
         try {
-            this.initCluster();
+            this.initCluster(user);
         } catch (Error e) {
 
         }
     }
 
-    public void initCluster() throws Exception {
+    public void initCluster(String user) throws Exception {
         jmx = true;
         AddressGenerator generator = null;
         String name = null;
@@ -89,6 +97,10 @@ public class ChatController implements Receiver, ChannelListener {
         channel.setReceiver(this).addChannelListener(this);
         channel.connect(cluster_name, null, stateTimeout);
         this.setTitle("Chatto");
+
+        Command comm = new Command(Command.JOIN, user);
+        byte[] buf = Util.streamableToByteBuffer(comm);
+        sendToAll(buf);
     }
 
     private Color selectColor() {
@@ -143,7 +155,6 @@ public class ChatController implements Receiver, ChannelListener {
             Command comm = Util.streamableFromByteBuffer(Command::new, buf, msg.getOffset(), msg.getLength());
             switch (comm.mode) {
                 case Command.DRAW:
-
                     Platform.runLater(() -> {
                         int x = comm.x;
                         int y = comm.y;
@@ -157,20 +168,25 @@ public class ChatController implements Receiver, ChannelListener {
 
                         whiteboard.getChildren().add(newCircle);
                     });
-
                     break;
                 case Command.CLEAR:
+                case Command.JOIN:
+                    Platform.runLater(() -> {
+                        String user = comm.message;
+                        Label label = new Label();
+                        label.setText(user + " Se ha unido al chat");
+                        usersPane.getChildren().add(label);
+                    });
                     break;
                 case Command.MESSAGE:
-
                     Platform.runLater(() -> {
                         String newMessage = comm.message;
+                        String user = comm.user;
                         System.out.println("Mensaje recibido: " + newMessage);
                         Label label = new Label();
-                        label.setText(newMessage);
+                        label.setText(user + " ha escrito: " + newMessage);
                         chatContent.getChildren().add(label);
                     });
-
                     break;
                 default:
                     System.err.println("***** received invalid draw command " + comm.mode);
@@ -242,7 +258,5 @@ public class ChatController implements Receiver, ChannelListener {
         } else {
             System.out.println("** View=" + v);
         }
-
     }
-
 }

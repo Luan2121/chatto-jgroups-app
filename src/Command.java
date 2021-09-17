@@ -13,6 +13,7 @@ public class Command implements Streamable {
     static final byte DRAW = 1;
     static final byte CLEAR = 2;
     static final byte MESSAGE = 3;
+    static final byte JOIN = 4;
     byte mode;
     int x;
     int y;
@@ -22,6 +23,7 @@ public class Command implements Streamable {
     double blue;
 
     String message;
+    String user;
 
     public Command() { // needed for streamable
     }
@@ -32,6 +34,12 @@ public class Command implements Streamable {
 
     Command(byte mode, String message) {
         this.message = message;
+        this.mode = mode;
+    }
+
+    Command(byte mode, String message, String user) {
+        this.message = message;
+        this.user = user;
         this.mode = mode;
     }
 
@@ -49,6 +57,7 @@ public class Command implements Streamable {
         out.writeByte(mode);
         out.writeInt(x);
         out.writeInt(y);
+        out.writeUTF(user);
         out.writeDouble(red);
         out.writeDouble(green);
         out.writeDouble(blue);
@@ -64,6 +73,7 @@ public class Command implements Streamable {
         green = in.readDouble();
         blue = in.readDouble();
         message = in.readUTF();
+        user = in.readUTF();
     }
 
     public String toString() {

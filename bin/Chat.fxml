@@ -17,9 +17,9 @@
          </content>
       </ScrollPane>
       <ScrollPane layoutX="14.0" layoutY="15.0" prefHeight="71.0" prefWidth="296.0">
-        <content>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="200.0" />
-        </content>
+         <content>
+            <VBox fx:id="usersPane" prefHeight="289.0" prefWidth="280.0" />
+         </content>
       </ScrollPane>
       <Label alignment="TOP_LEFT" contentDisplay="CENTER" layoutX="323.0" layoutY="15.0" prefHeight="71.0" prefWidth="248.0" text="Chatto">
          <font>
